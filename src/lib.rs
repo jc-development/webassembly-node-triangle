@@ -1,4 +1,3 @@
-use rand::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -32,18 +31,24 @@ struct Sheet {
 pub fn main_js() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
 
+    let context = browser::context().expect("Could not get browser context");
+
+    browser::spawn_local(async move {
+        let sheet: Sheet = browser::fetch_json("rbh.json")
+            .await
+            .expect("Could not fetch json")
+            .into_serde()
+            .expect("Could not convertr rbh.json into a Sheet structure");
+
+        let image = web_sys::HtmlImageElement::new().unwrap();
+    });
+
     let document = browser::document().expect("No Document Found");
+
     let canvas = document
         .get_element_by_id("canvas")
         .unwrap()
         .dyn_into::<web_sys::HtmlCanvasElement>()
-        .unwrap();
-
-    let context = canvas
-        .get_context("2d")
-        .unwrap()
-        .unwrap()
-        .dyn_into::<web_sys::CanvasRenderingContext2d>()
         .unwrap();
 
     wasm_bindgen_futures::spawn_local(async move {
